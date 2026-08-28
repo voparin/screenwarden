@@ -13,6 +13,7 @@ dependencies = [
     "jinja2>=3.1",
     "pyyaml>=6.0",
     "watchdog>=4.0",
+    "python-multipart>=0.0.9",
 ]
 
 [project.optional-dependencies]
@@ -26,6 +27,9 @@ dev = [
 screenwarden = "screenwarden.cli.main:main"
 screenwarden-notify = "screenwarden.notifier.main:main"
 screenwarden-daemon = "screenwarden.daemon.main:main"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/screenwarden"]

@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Settings</h1>
+<form method="post" action="/settings">
+  <label>Daily limit (minutes):
+    <input type="number" name="daily_limit_minutes" value="{{ user_cfg.daily_limit_minutes }}">
+  </label>
+  <label>Warning (minutes before limit):
+    <input type="number" name="warning_minutes" value="{{ user_cfg.warning_minutes }}">
+  </label>
+  <label>Grace period (minutes):
+    <input type="number" name="grace_minutes" value="{{ user_cfg.grace_minutes }}">
+  </label>
+  <button type="submit">Save</button>
+</form>
+{% endblock %}

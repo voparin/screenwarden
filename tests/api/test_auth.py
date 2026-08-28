@@ -23,7 +23,6 @@ def test_dashboard_requires_auth():
     assert response.status_code == 401
 
 
-@pytest.mark.skip(reason="route implemented in Task 9")
 def test_dashboard_accessible_with_correct_password():
     client = TestClient(make_test_app(password="secret"))
     response = client.get("/", auth=("admin", "secret"))

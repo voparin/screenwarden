@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Today</h1>
+<p>Used: {{ used_fmt }}</p>
+<p>Limit: {{ limit_fmt }}</p>
+<p>Remaining: {{ remaining_fmt }}</p>
+
+<form method="post" action="/grants">
+  <label>Grant extra time (minutes):
+    <input type="number" name="minutes" min="1" max="120" value="15">
+  </label>
+  <label>Reason (optional):
+    <input type="text" name="reason">
+  </label>
+  <button type="submit">Grant</button>
+</form>
+{% endblock %}
