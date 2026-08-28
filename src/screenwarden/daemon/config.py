@@ -1,6 +1,12 @@
-from dataclasses import dataclass
-from typing import Dict
+from dataclasses import dataclass, field
+from typing import Dict, Optional
 import yaml
+
+
+@dataclass
+class DashboardConfig:
+    port: int = 8080
+    password_hash: str = ""
 
 
 @dataclass
@@ -26,6 +32,7 @@ class Config:
     def __init__(self, path: str):
         self._path = path
         self.users: Dict[str, UserConfig] = {}
+        self.dashboard: DashboardConfig = DashboardConfig()
 
     def load(self):
         with open(self._path) as f:
@@ -38,3 +45,8 @@ class Config:
             )
             for username, data in raw.get("users", {}).items()
         }
+        dash = raw.get("dashboard", {})
+        self.dashboard = DashboardConfig(
+            port=dash.get("port", 8080),
+            password_hash=dash.get("password_hash", ""),
+        )

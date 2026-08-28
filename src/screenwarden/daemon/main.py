@@ -1,9 +1,13 @@
 import logging
 import signal
+import threading
 import time
 from datetime import datetime, date
 from pathlib import Path
 
+import uvicorn
+
+from screenwarden.api.app import create_app
 from screenwarden.daemon.config import Config
 from screenwarden.daemon.db import Database
 from screenwarden.daemon.session import SessionDetector
@@ -29,6 +33,17 @@ def run():
 
     config = Config(CONFIG_PATH)
     config.load()
+
+    # Start the parent dashboard API in a background thread
+    api_app = create_app(db=db, config=config, password=config.dashboard.password_hash)
+    api_thread = threading.Thread(
+        target=uvicorn.run,
+        args=(api_app,),
+        kwargs={"host": "0.0.0.0", "port": config.dashboard.port, "log_level": "warning"},
+        daemon=True,
+    )
+    api_thread.start()
+    logger.info("Dashboard started on port %d", config.dashboard.port)
 
     trackers: dict[str, Tracker] = {}
     detectors: dict[str, SessionDetector] = {}

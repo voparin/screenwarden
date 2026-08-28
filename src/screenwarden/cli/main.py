@@ -2,6 +2,7 @@ import argparse
 import getpass
 import hashlib
 import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -61,11 +62,10 @@ def cmd_install(args):
         username=username,
         password_hash=password_hash,
     ))
+    CONFIG_FILE.chmod(0o600)
     print(f"Config written to {CONFIG_FILE}")
 
-    exec_path = subprocess.run(
-        ["which", "screenwarden-daemon"], capture_output=True, text=True
-    ).stdout.strip()
+    exec_path = shutil.which("screenwarden-daemon") or "/usr/bin/screenwarden-daemon"
     SERVICE_FILE.write_text(SYSTEMD_UNIT.format(exec_path=exec_path))
     subprocess.run(["systemctl", "daemon-reload"])
     subprocess.run(["systemctl", "enable", "--now", "screenwarden"])

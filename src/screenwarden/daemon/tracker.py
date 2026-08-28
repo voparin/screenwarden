@@ -50,7 +50,7 @@ class Tracker:
         for grant in grants:
             self._extra_seconds += grant["extra_seconds"]
             self._db.mark_grant_processed(grant["id"])
-            if self.state in (TrackerState.WARNING, TrackerState.GRACE):
+            if self.state in (TrackerState.WARNING, TrackerState.GRACE, TrackerState.LOCKED):
                 self.state = TrackerState.OK
             logger.info(
                 "Applied time grant: +%d seconds for %s",

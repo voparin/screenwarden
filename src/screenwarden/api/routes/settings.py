@@ -31,14 +31,19 @@ def make_router(db: Database, config: Config, auth):
         _: str = Depends(auth),
     ):
         username = next(iter(config.users))
-        raw = {
-            "users": {
-                username: {
-                    "daily_limit_minutes": daily_limit_minutes,
-                    "warning_minutes": warning_minutes,
-                    "grace_minutes": grace_minutes,
-                }
-            }
+        # Read existing config to preserve dashboard and other sections
+        try:
+            with open(config._path) as f:
+                raw = yaml.safe_load(f) or {}
+        except FileNotFoundError:
+            raw = {}
+
+        if "users" not in raw:
+            raw["users"] = {}
+        raw["users"][username] = {
+            "daily_limit_minutes": daily_limit_minutes,
+            "warning_minutes": warning_minutes,
+            "grace_minutes": grace_minutes,
         }
         with open(config._path, "w") as f:
             yaml.dump(raw, f)

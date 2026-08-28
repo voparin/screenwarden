@@ -89,3 +89,17 @@ def test_grace_expires_transitions_to_locked():
     db.add_usage_seconds("jakob", day, 60)
     tracker.tick(active=True, now=datetime(2026, 8, 27, 10, 1, 30), today=day)
     assert tracker.state == TrackerState.LOCKED
+
+
+def test_grant_while_locked_unlocks():
+    db = make_db()
+    config = make_config(limit_min=1, warn_min=0, grace_min=0)
+    tracker = Tracker("jakob", db, config)
+    day = date(2026, 8, 27)
+    db.add_usage_seconds("jakob", day, 60)
+    tracker.tick(active=True, now=datetime(2026, 8, 27, 10, 0, 0), today=day)
+    assert tracker.state == TrackerState.LOCKED
+    # Grant extra time while locked
+    db.add_time_grant("jakob", datetime(2026, 8, 27, 10, 1, 0), 600, None)
+    tracker.tick(active=False, now=datetime(2026, 8, 27, 10, 1, 30), today=day)
+    assert tracker.state == TrackerState.OK

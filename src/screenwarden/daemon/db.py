@@ -72,10 +72,11 @@ class Database:
             self._conn.commit()
 
     def get_usage_today(self, user: str, day: date) -> int:
-        row = self._conn.execute(
-            "SELECT total_seconds FROM daily_usage WHERE user = ? AND date = ?",
-            (user, day.isoformat()),
-        ).fetchone()
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT total_seconds FROM daily_usage WHERE user = ? AND date = ?",
+                (user, day.isoformat()),
+            ).fetchone()
         return row["total_seconds"] if row else 0
 
     def add_time_grant(
@@ -93,10 +94,11 @@ class Database:
             self._conn.commit()
 
     def get_pending_grants(self, user: str) -> list[dict]:
-        rows = self._conn.execute(
-            "SELECT id, extra_seconds, reason FROM time_grants WHERE user = ? AND processed = 0",
-            (user,),
-        ).fetchall()
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT id, extra_seconds, reason FROM time_grants WHERE user = ? AND processed = 0",
+                (user,),
+            ).fetchall()
         return [dict(r) for r in rows]
 
     def mark_grant_processed(self, grant_id: int):
@@ -108,13 +110,13 @@ class Database:
             self._conn.commit()
 
     def get_usage_last_30_days(self, user: str, reference_date: date) -> list[dict]:
-        start_date = (reference_date - timedelta(days=29)).isoformat()
-        rows = self._conn.execute(
-            """SELECT date, total_seconds FROM daily_usage
-               WHERE user = ? AND date >= ?
-               ORDER BY date DESC""",
-            (user, start_date),
-        ).fetchall()
+        with self._lock:
+            rows = self._conn.execute(
+                """SELECT date, total_seconds FROM daily_usage
+                   WHERE user = ? AND date >= ?
+                   ORDER BY date DESC""",
+                (user, (reference_date - timedelta(days=29)).isoformat()),
+            ).fetchall()
         return [dict(r) for r in rows]
 
     def close(self):
