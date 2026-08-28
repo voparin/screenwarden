@@ -1,0 +1,10 @@
+Package: screenwarden
+Version: 0.1.0
+Section: utils
+Priority: optional
+Architecture: all
+Depends: python3 (>= 3.11), python3-pip
+Maintainer: screenwarden contributors
+Description: Linux parental screen time control daemon
+ screenwarden enforces daily screen time limits for child user accounts.
+ Includes a local web dashboard for parent control.
