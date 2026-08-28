@@ -1,4 +1,5 @@
 import logging
+import shlex
 import subprocess
 
 logger = logging.getLogger(__name__)
@@ -24,10 +25,8 @@ class Enforcer:
             )
 
     def send_desktop_notification(self, title: str, body: str):
+        cmd = f"notify-send {shlex.quote(title)} {shlex.quote(body)}"
         subprocess.run(
-            [
-                "su", "-", self._username, "-c",
-                f'notify-send "{title}" "{body}"',
-            ],
+            ["su", "-", self._username, "-c", cmd],
             capture_output=True,
         )

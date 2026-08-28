@@ -38,7 +38,7 @@ def test_send_notify_calls_su_with_notify_send():
         mock_run.assert_called_once_with(
             [
                 "su", "-", "jakob", "-c",
-                'notify-send "Screen time warning" "5 minutes left"',
+                "notify-send 'Screen time warning' '5 minutes left'",
             ],
             capture_output=True,
         )
