@@ -52,6 +52,22 @@ if ! command -v python3 &>/dev/null; then
   err "Python 3 is not installed. Install it first: sudo apt install python3 (Debian/Ubuntu) or sudo dnf install python3 (Fedora)"
 fi
 
+# Ensure pip is available — install it automatically if missing
+if ! python3 -m pip --version &>/dev/null; then
+  log "pip not found. Installing pip..."
+  if command -v apt-get &>/dev/null; then
+    apt-get install -y python3-pip
+  elif command -v dnf &>/dev/null; then
+    dnf install -y python3-pip
+  elif command -v zypper &>/dev/null; then
+    zypper install -y python3-pip
+  else
+    # Fallback: use get-pip.py
+    log "No known package manager found. Downloading get-pip.py..."
+    python3 <(curl -fsSL https://bootstrap.pypa.io/get-pip.py)
+  fi
+fi
+
 PYTHON_VERSION=$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
 PYTHON_MAJOR=$(echo "$PYTHON_VERSION" | cut -d. -f1)
 PYTHON_MINOR=$(echo "$PYTHON_VERSION" | cut -d. -f2)
