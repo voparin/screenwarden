@@ -37,11 +37,11 @@ if [[ "$UNINSTALL" -eq 1 ]]; then
 
   [[ -d /etc/screenwarden ]] && { log "Removing config..."; rm -rf /etc/screenwarden; }
   [[ -d /var/lib/screenwarden ]] && { log "Removing database..."; rm -rf /var/lib/screenwarden; }
-  [[ -f /etc/systemd/system/screenwarden.service ]] && {
+  if [[ -f /etc/systemd/system/screenwarden.service ]]; then
     log "Removing systemd unit..."
     rm -f /etc/systemd/system/screenwarden.service
-    systemctl daemon-reload
-  }
+  fi
+  systemctl daemon-reload
 
   log "screenwarden has been uninstalled."
   exit 0
