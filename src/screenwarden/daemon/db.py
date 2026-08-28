@@ -1,5 +1,6 @@
 import sqlite3
-from datetime import date, datetime
+import threading
+from datetime import date, datetime, timedelta
 from typing import Optional
 
 
@@ -7,6 +8,7 @@ class Database:
     def __init__(self, path: str):
         self._conn = sqlite3.connect(path, check_same_thread=False)
         self._conn.row_factory = sqlite3.Row
+        self._lock = threading.Lock()
 
     def init_schema(self):
         self._conn.executescript("""
@@ -33,37 +35,41 @@ class Database:
                 processed INTEGER NOT NULL DEFAULT 0
             );
         """)
-        self._conn.commit()
+        with self._lock:
+            self._conn.commit()
 
     def record_session_start(self, user: str, started_at: datetime) -> int:
-        cur = self._conn.execute(
-            "INSERT INTO sessions (user, started_at) VALUES (?, ?)",
-            (user, started_at.isoformat()),
-        )
-        self._conn.commit()
-        return cur.lastrowid
+        with self._lock:
+            cur = self._conn.execute(
+                "INSERT INTO sessions (user, started_at) VALUES (?, ?)",
+                (user, started_at.isoformat()),
+            )
+            self._conn.commit()
+            return cur.lastrowid
 
     def record_session_end(self, session_id: int, ended_at: datetime):
-        self._conn.execute(
-            """UPDATE sessions
-               SET ended_at = ?,
-                   duration_seconds = CAST(
-                       (julianday(?) - julianday(started_at)) * 86400 AS INTEGER
-                   )
-               WHERE id = ?""",
-            (ended_at.isoformat(), ended_at.isoformat(), session_id),
-        )
-        self._conn.commit()
+        with self._lock:
+            self._conn.execute(
+                """UPDATE sessions
+                   SET ended_at = ?,
+                       duration_seconds = CAST(
+                           (julianday(?) - julianday(started_at)) * 86400 AS INTEGER
+                       )
+                   WHERE id = ?""",
+                (ended_at.isoformat(), ended_at.isoformat(), session_id),
+            )
+            self._conn.commit()
 
     def add_usage_seconds(self, user: str, day: date, seconds: int):
-        self._conn.execute(
-            """INSERT INTO daily_usage (user, date, total_seconds)
-               VALUES (?, ?, ?)
-               ON CONFLICT(user, date)
-               DO UPDATE SET total_seconds = total_seconds + excluded.total_seconds""",
-            (user, day.isoformat(), seconds),
-        )
-        self._conn.commit()
+        with self._lock:
+            self._conn.execute(
+                """INSERT INTO daily_usage (user, date, total_seconds)
+                   VALUES (?, ?, ?)
+                   ON CONFLICT(user, date)
+                   DO UPDATE SET total_seconds = total_seconds + excluded.total_seconds""",
+                (user, day.isoformat(), seconds),
+            )
+            self._conn.commit()
 
     def get_usage_today(self, user: str, day: date) -> int:
         row = self._conn.execute(
@@ -79,11 +85,12 @@ class Database:
         extra_seconds: int,
         reason: Optional[str],
     ):
-        self._conn.execute(
-            "INSERT INTO time_grants (user, granted_at, extra_seconds, reason) VALUES (?, ?, ?, ?)",
-            (user, granted_at.isoformat(), extra_seconds, reason),
-        )
-        self._conn.commit()
+        with self._lock:
+            self._conn.execute(
+                "INSERT INTO time_grants (user, granted_at, extra_seconds, reason) VALUES (?, ?, ?, ?)",
+                (user, granted_at.isoformat(), extra_seconds, reason),
+            )
+            self._conn.commit()
 
     def get_pending_grants(self, user: str) -> list[dict]:
         rows = self._conn.execute(
@@ -93,18 +100,20 @@ class Database:
         return [dict(r) for r in rows]
 
     def mark_grant_processed(self, grant_id: int):
-        self._conn.execute(
-            "UPDATE time_grants SET processed = 1 WHERE id = ?",
-            (grant_id,),
-        )
-        self._conn.commit()
+        with self._lock:
+            self._conn.execute(
+                "UPDATE time_grants SET processed = 1 WHERE id = ?",
+                (grant_id,),
+            )
+            self._conn.commit()
 
-    def get_usage_last_30_days(self, user: str) -> list[dict]:
+    def get_usage_last_30_days(self, user: str, reference_date: date) -> list[dict]:
+        start_date = (reference_date - timedelta(days=29)).isoformat()
         rows = self._conn.execute(
             """SELECT date, total_seconds FROM daily_usage
-               WHERE user = ? AND date >= date('now', '-29 days')
+               WHERE user = ? AND date >= ?
                ORDER BY date DESC""",
-            (user,),
+            (user, start_date),
         ).fetchall()
         return [dict(r) for r in rows]
 

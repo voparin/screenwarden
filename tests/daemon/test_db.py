@@ -1,4 +1,3 @@
-import sqlite3
 import pytest
 from datetime import date, datetime
 from screenwarden.daemon.db import Database
@@ -73,7 +72,7 @@ def test_mark_grant_processed(db):
 def test_get_usage_last_30_days(db):
     db.add_usage_seconds("jakob", date(2026, 8, 27), 3600)
     db.add_usage_seconds("jakob", date(2026, 8, 26), 1800)
-    rows = db.get_usage_last_30_days("jakob")
+    rows = db.get_usage_last_30_days("jakob", reference_date=date(2026, 8, 27))
     assert len(rows) == 2
     assert rows[0]["date"] == "2026-08-27"
     assert rows[0]["total_seconds"] == 3600
