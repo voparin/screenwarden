@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "screenwarden"
-version = "0.1.0"
+version = "0.2.0"
 description = "Linux parental screen time control daemon"
 requires-python = ">=3.11"
 authors = [{name = "voparin"}]
