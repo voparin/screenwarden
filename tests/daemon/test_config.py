@@ -88,3 +88,34 @@ def test_limit_in_seconds(tmp_path):
     assert u.daily_limit_seconds == 5400
     assert u.warning_seconds == 300
     assert u.grace_seconds == 180
+
+
+def test_cloud_config_defaults_when_section_absent(tmp_path):
+    p = write_config(tmp_path, """
+        users:
+          jakob:
+            daily_limit_minutes: 120
+            warning_minutes: 5
+            grace_minutes: 5
+    """)
+    cfg = Config(str(p))
+    cfg.load()
+    assert cfg.cloud.api_url == "https://screenwarden-cloud.onrender.com"
+    assert cfg.cloud.device_token == ""
+
+
+def test_cloud_config_parsed_when_present(tmp_path):
+    p = write_config(tmp_path, """
+        users:
+          jakob:
+            daily_limit_minutes: 120
+            warning_minutes: 5
+            grace_minutes: 5
+        cloud:
+          api_url: https://custom.example.com
+          device_token: abc123token
+    """)
+    cfg = Config(str(p))
+    cfg.load()
+    assert cfg.cloud.api_url == "https://custom.example.com"
+    assert cfg.cloud.device_token == "abc123token"

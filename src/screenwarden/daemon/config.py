@@ -1,5 +1,5 @@
-from dataclasses import dataclass, field
-from typing import Dict, Optional
+from dataclasses import dataclass
+from typing import Dict
 import yaml
 
 
@@ -7,6 +7,12 @@ import yaml
 class DashboardConfig:
     port: int = 8080
     password_hash: str = ""
+
+
+@dataclass
+class CloudConfig:
+    api_url: str = "https://screenwarden-cloud.onrender.com"
+    device_token: str = ""
 
 
 @dataclass
@@ -33,6 +39,7 @@ class Config:
         self._path = path
         self.users: Dict[str, UserConfig] = {}
         self.dashboard: DashboardConfig = DashboardConfig()
+        self.cloud: CloudConfig = CloudConfig()
 
     def load(self):
         with open(self._path) as f:
@@ -49,4 +56,9 @@ class Config:
         self.dashboard = DashboardConfig(
             port=dash.get("port", 8080),
             password_hash=dash.get("password_hash", ""),
+        )
+        cloud = raw.get("cloud", {})
+        self.cloud = CloudConfig(
+            api_url=cloud.get("api_url", "https://screenwarden-cloud.onrender.com"),
+            device_token=cloud.get("device_token", ""),
         )
